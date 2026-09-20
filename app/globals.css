@@ -1,0 +1,141 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-rgb: 237 241 238;
+  --surface-rgb: 255 255 255;
+  --raised-rgb: 246 248 246;
+  --ink-rgb: 21 35 42;
+  --ink-soft-rgb: 86 106 114;
+  --line-rgb: 214 223 217;
+  --accent-rgb: 15 122 98;
+  --alert-rgb: 166 43 31;
+  --warn-rgb: 143 85 17;
+  --c-fixo-rgb: 31 111 139;
+  --c-variavel-rgb: 74 143 60;
+  --c-fatura-rgb: 138 91 181;
+
+  --bg: rgb(var(--bg-rgb));
+  --surface: rgb(var(--surface-rgb));
+  --raised: rgb(var(--raised-rgb));
+  --ink: rgb(var(--ink-rgb));
+  --ink-soft: rgb(var(--ink-soft-rgb));
+  --line: rgb(var(--line-rgb));
+  --accent: rgb(var(--accent-rgb));
+  --alert: rgb(var(--alert-rgb));
+  --warn: rgb(var(--warn-rgb));
+  --c-fixo: rgb(var(--c-fixo-rgb));
+  --c-variavel: rgb(var(--c-variavel-rgb));
+  --c-fatura: rgb(var(--c-fatura-rgb));
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg-rgb: 16 24 25;
+    --surface-rgb: 23 33 37;
+    --raised-rgb: 29 41 45;
+    --ink-rgb: 231 239 234;
+    --ink-soft-rgb: 159 178 176;
+    --line-rgb: 43 57 61;
+    --accent-rgb: 55 179 147;
+    --alert-rgb: 228 105 90;
+    --warn-rgb: 209 154 78;
+    --c-fixo-rgb: 90 167 194;
+    --c-variavel-rgb: 125 192 107;
+    --c-fatura-rgb: 181 142 224;
+  
+    --bg: rgb(var(--bg-rgb));
+    --surface: rgb(var(--surface-rgb));
+    --raised: rgb(var(--raised-rgb));
+    --ink: rgb(var(--ink-rgb));
+    --ink-soft: rgb(var(--ink-soft-rgb));
+    --line: rgb(var(--line-rgb));
+    --accent: rgb(var(--accent-rgb));
+    --alert: rgb(var(--alert-rgb));
+    --warn: rgb(var(--warn-rgb));
+    --c-fixo: rgb(var(--c-fixo-rgb));
+    --c-variavel: rgb(var(--c-variavel-rgb));
+    --c-fatura: rgb(var(--c-fatura-rgb));
+  }
+}
+
+:root[data-theme='dark'] {
+    --bg-rgb: 16 24 25;
+    --surface-rgb: 23 33 37;
+    --raised-rgb: 29 41 45;
+    --ink-rgb: 231 239 234;
+    --ink-soft-rgb: 159 178 176;
+    --line-rgb: 43 57 61;
+    --accent-rgb: 55 179 147;
+    --alert-rgb: 228 105 90;
+    --warn-rgb: 209 154 78;
+    --c-fixo-rgb: 90 167 194;
+    --c-variavel-rgb: 125 192 107;
+    --c-fatura-rgb: 181 142 224;
+  
+    --bg: rgb(var(--bg-rgb));
+    --surface: rgb(var(--surface-rgb));
+    --raised: rgb(var(--raised-rgb));
+    --ink: rgb(var(--ink-rgb));
+    --ink-soft: rgb(var(--ink-soft-rgb));
+    --line: rgb(var(--line-rgb));
+    --accent: rgb(var(--accent-rgb));
+    --alert: rgb(var(--alert-rgb));
+    --warn: rgb(var(--warn-rgb));
+    --c-fixo: rgb(var(--c-fixo-rgb));
+    --c-variavel: rgb(var(--c-variavel-rgb));
+    --c-fatura: rgb(var(--c-fatura-rgb));
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-feature-settings: 'cv05' 1;
+}
+
+/* Números sempre alinhados em colunas */
+.tnum {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* Componentes reutilizados */
+@layer components {
+  .card {
+    @apply rounded-card border border-line bg-surface p-4 sm:p-5;
+  }
+  .label {
+    @apply mb-1.5 block text-[13px] font-medium text-soft;
+  }
+  .input {
+    @apply w-full rounded-lg border border-line bg-raised px-3 py-2.5 text-[15px] text-ink
+           outline-none transition placeholder:text-soft/60
+           focus:border-accent focus:ring-2 focus:ring-accent/25;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-[15px]
+           font-medium transition focus-visible:outline focus-visible:outline-2
+           focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply btn bg-accent text-white hover:brightness-110 active:brightness-95;
+  }
+  .btn-ghost {
+    @apply btn border border-line bg-raised text-ink hover:border-soft/50;
+  }
+  .badge {
+    @apply inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
