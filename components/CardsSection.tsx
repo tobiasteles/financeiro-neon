@@ -2,6 +2,7 @@ import { addCard, removeCard, saveInvoice, toggleInvoiceStatus } from '@/app/pai
 import { cardStatus } from '@/lib/finance';
 import { dayLabel, money, percent } from '@/lib/format';
 import type { CardInvoice, CardPurchaseTotal, CreditCard } from '@/lib/types';
+import ImportInvoiceForm from './ImportInvoiceForm';
 
 const TONE = {
   ok: { ring: 'border-line', bar: 'var(--accent)', badge: 'border-line text-soft' },
@@ -69,7 +70,7 @@ export default function CardsSection({
           Adicionar cartão
         </button>
       </form>
-
+      <ImportInvoiceForm month={month} cards={cards} />
       {cards.length === 0 && (
         <p className="card text-[14px] text-soft">
           Cadastre os cartões da casa para acompanhar quanto do limite já foi usado e o que vence

@@ -80,6 +80,32 @@ export async function insertExpense(
   `;
 }
 
+/** Insere várias compras de uma vez (importação de fatura), num único round trip. */
+export async function insertExpensesBulk(
+  householdId: string,
+  cardId: string,
+  invoiceMonth: string,
+  items: { month: string; description: string; category: string; amount: number }[],
+) {
+  if (items.length === 0) return;
+
+  const values: unknown[] = [];
+  const rows = items.map((item, i) => {
+    const base = i * 8;
+    values.push(
+      householdId, item.month, item.description, item.category,
+      'variavel', item.amount, cardId, invoiceMonth,
+    );
+    return `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5}, $${base + 6}, $${base + 7}, $${base + 8})`;
+  });
+
+  await sql(
+    `insert into expenses (household_id, month, description, category, kind, amount, card_id, invoice_month)
+     values ${rows.join(', ')}`,
+    values,
+  );
+}
+
 export async function deleteExpense(householdId: string, id: string) {
   await sql`delete from expenses where id = ${id} and household_id = ${householdId}`;
 }
