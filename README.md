@@ -1,107 +1,85 @@
-# Orçamento Familiar — Neon
+<div align="center">
 
-Controle de renda, gastos e faturas de cartão, mês a mês. Next.js 14 (App Router),
-React, TypeScript, Tailwind CSS e **Neon** (Postgres serverless).
+# 💰 Orçamento Familiar Neon
 
-Sem serviço de autenticação externo: as contas ficam na tabela `users` do próprio Neon,
-com senha em scrypt e sessão em cookie httpOnly assinado (JWT HS256).
+**Controle de renda, gastos e faturas de cartão, mês a mês. Importe a fatura em PDF e compartilhe o orçamento com a família.**
 
-## Como rodar
+[![Next.js](https://img.shields.io/badge/Next.js-14-black?logo=nextdotjs)](https://nextjs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Tailwind](https://img.shields.io/badge/Tailwind-3-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
+[![Neon](https://img.shields.io/badge/Neon-Postgres-00E599?logo=postgresql&logoColor=white)](https://neon.tech)
 
-**1. Crie o banco no Neon** em neon.tech e copie a *connection string* em
-*Dashboard → Connection Details*. Use a opção **Pooled connection** — o driver HTTP do Neon
-trabalha melhor com ela em ambiente serverless.
+[**🔗 Ver online**](https://financeiro-neon-phi.vercel.app/) · [Reportar um bug](../../issues)
 
-**2. Configure as variáveis.**
+<img src="https://i.imgur.com/MGjUA1a.png" alt="Painel do Orçamento Familiar" width="720" />
+
+</div>
+
+---
+
+## ✨ O que é
+
+Um painel simples para a família enxergar para onde o dinheiro vai. Você lança a renda do mês, os gastos fixos e variáveis e as faturas dos cartões, e o app mostra quanto sobra, quanto falta e onde há risco.
+
+## 🚀 Funcionalidades
+
+- **Navegação mês a mês** com renda, gastos fixos, variáveis e faturas
+- **Importação de fatura em PDF:** lê o extrato, ignora linhas de resumo (saldo anterior, juros, pagamentos) e categoriza as compras
+- **Alertas inteligentes**
+  - Déficit: o resumo fica vermelho e mostra quanto falta para fechar o mês
+  - Cartão: aviso quando o uso do limite chega a 80% ou a fatura vence em até 5 dias
+- **Regra 50/30/20** calculada automaticamente (necessidades, desejos e poupança/dívidas)
+- **Gráfico por categoria** (donut) e trilho de comprometimento da renda
+- **Casa compartilhada:** convide familiares com um código e vejam os mesmos lançamentos
+
+## 🔐 Segurança por design
+
+Neon é Postgres puro, sem RLS acoplado ao login. Por isso a autorização vive em **um lugar só**, `lib/queries.ts`:
+
+- Toda query, inclusive `update` e `delete`, carrega `where household_id = $1`, com o id vindo da **sessão**, nunca do formulário. Um id de outra casa enviado na requisição não afeta nenhuma linha
+- Senhas com **scrypt** (salt por usuário) e comparação com `timingSafeEqual`
+- Sessão em **JWT HS256** (`jose`), cookie `httpOnly`, `sameSite=lax` e `secure` em produção
+- Middleware valida só a assinatura (roda no Edge, sem tocar o banco); a identidade real é resolvida em cada Server Action
+- O login responde igual para e-mail inexistente e senha errada, para não revelar quem tem conta
+
+## 🛠️ Stack
+
+| Camada         | Tecnologias                                         |
+| -------------- | --------------------------------------------------- |
+| Framework      | Next.js 14 (App Router, Server Actions) e React 18  |
+| Linguagem      | TypeScript                                          |
+| Estilo         | Tailwind CSS 3                                      |
+| Banco de dados | PostgreSQL no Neon (driver serverless HTTP)         |
+| Autenticação   | `jose` (JWT) e scrypt, sem serviço externo          |
+| PDF            | `pdf-parse`                                         |
+
+## 🧪 Rodando localmente
 
 ```bash
-cp .env.example .env.local
-```
-
-- `DATABASE_URL` — a connection string do Neon (mantenha o `?sslmode=require`).
-- `AUTH_SECRET` — gere com:
-  `node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"`
-
-**3. Crie as tabelas.**
-
-```bash
+git clone https://github.com/tobiasteles/financeiro-neon.git
+cd financeiro-neon
 npm install
-npm run db:setup    # aplica db/schema.sql; pode rodar de novo sem problema
+
+cp .env.example .env.local   # preencha DATABASE_URL e AUTH_SECRET
+npm run db:setup             # aplica db/schema.sql (pode rodar de novo)
+npm run dev                  # http://localhost:3000
 ```
 
-Se preferir, cole `db/schema.sql` direto no SQL Editor do Neon.
+| Variável       | Descrição                                                                   |
+| -------------- | --------------------------------------------------------------------------- |
+| `DATABASE_URL` | Connection string do Neon (use a **pooled connection**)                     |
+| `AUTH_SECRET`  | Segredo da sessão: `node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"` |
 
-**4. Suba o app.**
-
-```bash
-npm run dev
-```
-
-Abra http://localhost:3000, crie uma conta e comece a lançar. Não há confirmação de
-e-mail: o cadastro já entra direto.
-
-## Deploy
-
-Na Vercel, cadastre `DATABASE_URL` e `AUTH_SECRET` nas variáveis de ambiente. Se usar a
-integração oficial Vercel + Neon, a `DATABASE_URL` é injetada sozinha — só falta o
-`AUTH_SECRET`. Nada mais muda: o driver HTTP funciona em Node e em Edge.
-
-## Como os dados ficam privados
-
-Neon é Postgres puro, sem a camada de RLS acoplada ao login que o Supabase oferece. A
-autorização, portanto, mora no código, em um lugar só: **`lib/queries.ts`**. Toda query —
-inclusive `update` e `delete` — carrega `where household_id = $1`, com o id vindo da sessão,
-nunca do formulário. Um id de outra casa chutado na requisição simplesmente não afeta
-nenhuma linha.
-
-A regra prática ao adicionar uma funcionalidade: se a query nova não tem `household_id` na
-cláusula `where`, ela está errada.
-
-Se quiser RLS de verdade mais tarde, dá para criar um role por requisição e usar
-`set local app.household_id` — mas para um app familiar a checagem na camada de dados é
-suficiente e bem mais simples de auditar.
-
-## Autenticação
-
-- **Senha:** scrypt com salt de 16 bytes por usuário, guardada como `salt:hash`. A
-  comparação usa `timingSafeEqual`.
-- **Sessão:** JWT HS256 assinado com `AUTH_SECRET`, válido por 30 dias, em cookie
-  `httpOnly` + `sameSite=lax` + `secure` em produção.
-- **Middleware:** confere só a assinatura do cookie (roda no Edge, sem tocar o banco). A
-  identidade real é resolvida em `requireUser()` dentro de cada server action.
-- O login responde a mesma mensagem para e-mail inexistente e senha errada, para não
-  revelar quais e-mails estão cadastrados.
-
-## Estrutura
+## 📁 Estrutura
 
 ```
-app/
-  entrar/        login e cadastro (server actions de auth)
-  painel/        dashboard + server actions de escrita
-components/      UI: resumo, trilho da renda, gastos, cartões, regra 50/30/20
-lib/
-  db.ts          conexão com o Neon (driver serverless HTTP)
-  queries.ts     todas as queries, sempre escopadas por household_id
-  auth.ts        scrypt + usuário da requisição atual
-  session.ts     assinatura/leitura do cookie (compatível com Edge)
-  finance.ts     totais, alerta de déficit, uso de limite, regra 50/30/20
-  format.ts      moeda BRL, datas, parse de valores digitados
-db/
-  schema.sql     tabelas e índices
-scripts/
-  setup-db.mjs   aplica o schema
+app/          # login/cadastro e painel (Server Actions)
+components/   # resumo, renda, gastos, cartões, regra 50/30/20, importação de fatura
+lib/          # db, queries (sempre escopadas), auth, session, finance, invoiceParser
+db/           # schema.sql
+scripts/      # setup-db.mjs
 ```
 
-## Regras de negócio
+## 👤 Autor
 
-- **Déficit:** quando gastos fixos + variáveis + faturas passam da renda do mês, o painel de
-  resumo fica vermelho e mostra o quanto falta para fechar o mês.
-- **Cartão:** aviso âmbar quando o uso do limite chega a 80% ou a fatura vence em até 5 dias;
-  aviso vermelho quando o limite estoura ou a fatura já venceu sem pagamento.
-- **50/30/20:** necessidades = moradia, alimentação, transporte e saúde; desejos = lazer e
-  outros; poupança e dívidas = faturas de cartão + o que sobra no fim do mês.
-
-## Compartilhar com a família
-
-Cada conta nasce com uma casa própria. Em *Ajustes* aparece o código de convite: quem colar
-esse código em *Entrar em outra casa* passa a ver e editar os mesmos lançamentos.
+**Tobias Teles** · [Portfólio](https://tobiasteles.vercel.app) · [LinkedIn](https://www.linkedin.com/in/tobias-teles/)
